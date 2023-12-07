@@ -38,6 +38,12 @@ git_repository(
     tag = "release-1.10.0",
 )
 
+git_repository(
+    name = "nlohmann_json",
+    remote = "https://github.com/nlohmann/json.git",
+    tag = "v3.11.3",
+)
+
 http_archive(
     name = "com_google_riegeli",
     sha256 = "059af80271b6e62df2662fbf0d1d2724a8eaf881d16459d59d4025132126672c",

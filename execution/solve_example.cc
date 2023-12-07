@@ -36,6 +36,7 @@
 #include "execution/tester_sandboxer.h"
 #include "riegeli/bytes/fd_reader.h"
 #include "riegeli/records/record_reader.h"
+#include "nlohmann/json.hpp"
 
 ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
 
@@ -68,8 +69,18 @@ absl::StatusOr<ContestProblem> FindGregorAndCryptography(
   riegeli::RecordReader<riegeli::FdReader<>> reader(
       std::forward_as_tuple(filename));
   ContestProblem problem;
+
   while (reader.ReadRecord(problem)) {
-    if (problem.name() == "1549_A. Gregor and Cryptography") return problem;
+    if (problem.name() == "1549_A. Gregor and Cryptography") {
+      int num_solutions = problem.solutions_size();
+      for (int i=num_solutions-1; i>=0; --i) {
+        if (problem.solutions(i).language() != 3) {
+          // remove this solution
+          problem.mutable_solutions(i)->Clear();
+        }
+      }
+      return problem;
+    }
   }
   return absl::NotFoundError(
       "Gregor and Cryptography problem not found. Did you pass the "
@@ -129,59 +140,58 @@ void ReportResults(const MultiTestResult& multi_result) {
 }
 
 absl::Status SolveGregorAndCryptography(
-    const absl::string_view valid_filename) {
-  ASSIGN_OR_RETURN(ContestProblem gregor_and_cryptography,
-                   FindGregorAndCryptography(valid_filename));
-  const std::vector<absl::string_view> inputs =
-      GetInputs(gregor_and_cryptography,
-                /*max_size=*/10);
-  const std::vector<absl::string_view> outputs =
-      GetOutputs(gregor_and_cryptography,
-                 /*max_size=*/10);
+  const absl::string_view valid_filename) {
 
-  Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
-  TestOptions options;
-  options.num_threads = 4;
-  options.stop_on_first_failure = true;
+  riegeli::RecordReader<riegeli::FdReader<>> reader(
+     std::forward_as_tuple(valid_filename));
+  ContestProblem problem;
 
-  std::cout << R"(We will try to solve "Gregor and Cryptography":
-https://codeforces.com/problemset/problem/1549/A
+  while (reader.ReadRecord(problem)) {
+    nlohmann::json json_data;
+    json_data["name"] = problem.name();
+    int num_solutions = problem.solutions_size();
+    for (int i=num_solutions-1; i>=0; --i) {
+      if (problem.solutions(i).language() != 3) {
+        // remove this solution
+        problem.mutable_solutions(i)->Clear();
+      }
+    }
+    const std::vector<absl::string_view> inputs =
+        GetInputs(problem,
+                  /*max_size=*/10);
+    const std::vector<absl::string_view> outputs =
+        GetOutputs(problem,
+                  /*max_size=*/10);
 
-We will run:
-  1. A program that does not compile.
-  2. A program that runs successfully, but gives the wrong answer sometimes.
-  3. A correct solution.
+    json_data["number"] = problem.solutions_size();
 
---------------------------------------------------------------------------------
-An invalid program is reported as not compiling:
+    Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
+    TestOptions options;
+    options.num_threads = 4;
+    options.stop_on_first_failure = true;
 
-)";
-  ASSIGN_OR_RETURN(MultiTestResult invalid_result,
-                   tester.Test(kInvalidSolution, inputs, options, outputs));
-  ReportResults(invalid_result);
 
-  std::cout << R"(
---------------------------------------------------------------------------------
-The bad solution passes a few tests but then fails.
-Because we set stop_on_first_failure to True, we stop once we see a failure.
-We are running on 4 threads, so it's possible that more than one failure occurs
-before all threads stop.
+    std::vector<double> times;
+    for (int i=0; i<problem.solutions_size(); ++i) {
+      ASSIGN_OR_RETURN(MultiTestResult result,
+                      tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
+      double total_time = 0.0;
+      for (const auto& test_result : result.test_results) {
+        if (*test_result.passed) {
+          double execution_duration = static_cast<double>(ToInt64Nanoseconds(test_result.execution_duration)) / 1e6;
+          total_time += execution_duration;
+        }
+        else {
+          total_time = 0;
+          break;
+        }
+      }
+      times.push_back(total_time);
+    }
+    json_data["times"] = times;
 
-)";
-  ASSIGN_OR_RETURN(MultiTestResult bad_result,
-                   tester.Test(kBadSolution, inputs, options, outputs));
-  ReportResults(bad_result);
-
-  std::cout << R"(
---------------------------------------------------------------------------------
-The good solution passes all tests.
-
-)";
-
-  ASSIGN_OR_RETURN(MultiTestResult good_result,
-                   tester.Test(kGoodSolution, inputs, options, outputs));
-  ReportResults(good_result);
-
+    std::cout << json_data.dump() << std::endl;
+  }
   return absl::OkStatus();
 }
 

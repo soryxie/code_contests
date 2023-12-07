@@ -19,10 +19,10 @@
 
 #include "absl/flags/flag.h"
 
-ABSL_FLAG(std::string, python3_path, "/usr/bin/python3.9",
+ABSL_FLAG(std::string, python3_path, "/usr/bin/python3.10",
           "The path to python3.");
 ABSL_FLAG(std::vector<std::string>, python3_library_paths,
-          {"/usr/lib/python3.9"}, "The paths to python3 libraries.");
+          {"/usr/lib/python3.10"}, "The paths to python3 libraries.");
 ABSL_FLAG(std::string, python2_path, "/usr/bin/python2.7",
           "The path to python2.");
 ABSL_FLAG(std::vector<std::string>, python2_library_paths,

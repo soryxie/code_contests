@@ -97,6 +97,7 @@ cc_binary(
         "@com_google_absl//absl/types:span",
         "@com_google_riegeli//riegeli/bytes:fd_reader",
         "@com_google_riegeli//riegeli/records:record_reader",
+        "@nlohmann_json//:json",
     ],
 )
 
