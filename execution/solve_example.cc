@@ -134,6 +134,7 @@ absl::Status SolveGregorAndCryptography(
     options.stop_on_first_failure = true;
 
     std::vector<double> times;
+    double times_sum = 0.0;
     MultiTestResult *multi_result = nullptr;
     bool purn_solution = false;
 
@@ -175,7 +176,8 @@ absl::Status SolveGregorAndCryptography(
       }
 
       times.push_back(total_time);
-      if (total_time * py_files > 5 * 60) {
+      times_sum += total_time;
+      if (times_sum > 2 * 60 && py_files * total_time > 5 * 60) {
         purn_solution = true;
         break;
       }
@@ -185,7 +187,7 @@ absl::Status SolveGregorAndCryptography(
     json_data["times"] = times;
     if (purn_solution) {
       std::cout << "Maybe too long" << std::endl;
-      std::ofstream out("./too_long_solutions.jsonl", std::ios_base::app);
+      std::ofstream out("/home/songrun/work/code_contests/too_long_solutions.jsonl", std::ios_base::app);
       out << json_data.dump() << std::endl;
       out.close();
       json_data["times"].clear();
