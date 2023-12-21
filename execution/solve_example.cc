@@ -22,6 +22,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <fstream>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/flag.h"
@@ -39,6 +40,7 @@
 #include "nlohmann/json.hpp"
 
 ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
+ABSL_FLAG(int, problem_no, "", "start index of the problem.");
 
 namespace deepmind::code_contests {
 namespace {
@@ -129,6 +131,7 @@ absl::Status SolveGregorAndCryptography(
     std::vector<double> times;
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
+      MultiTestResult &multi_result;
       if (problem.solutions(i).language() != 1 || problem.solutions(i).language() != 3) {
         times.push_back(0.0);
         continue;
@@ -136,15 +139,17 @@ absl::Status SolveGregorAndCryptography(
       } else if (problem.solutions(i).language() == 1) {
         ASSIGN_OR_RETURN(MultiTestResult result,
                         tester_py2.Test(problem.solutions(i).solution(), inputs, options, outputs));
+        multi_result = result;
       // python3
       } else { 
         ASSIGN_OR_RETURN(MultiTestResult result,
                         tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
+        multi_result = result;
       }
 
       // Get the total time
       double total_time = 0.0;
-      for (const auto& test_result : result.test_results) {
+      for (const auto& test_result : multi_result.test_results) {
         if (*test_result.passed) {
           double execution_duration = static_cast<double>(ToInt64Nanoseconds(test_result.execution_duration)) / 1e9;
           total_time += execution_duration;
@@ -172,14 +177,14 @@ absl::Status SolveGregorAndCryptography(
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
   const std::string filename = absl::GetFlag(FLAGS_valid_path);
-  const std::string problem_no = absl::GetFlag(FLAGS_problem_no);
+  const int problem_no = absl::GetFlag(FLAGS_problem_no);
   if (filename.empty()) {
     std::cerr << "The flag `valid_path` was empty and it should not be, please "
                  "pass `--valid_path=...` "
               << std::endl;
   } else {
     absl::Status status =
-        deepmind::code_contests::SolveGregorAndCryptography(filename, atoi(problem_no.c_str()));
+        deepmind::code_contests::SolveGregorAndCryptography(filename, problem_no);
     if (!status.ok()) {
       std::cerr << "Failed: " << status.message() << std::endl;
     }
