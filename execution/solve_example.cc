@@ -167,6 +167,7 @@ absl::Status SolveGregorAndCryptography(
     out << json_data.dump() << std::endl;
     out.close();
     std::cout << "finished!" << std::endl;
+    ++problem_no;
   }
   return absl::OkStatus();
 }
