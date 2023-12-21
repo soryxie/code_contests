@@ -125,11 +125,7 @@ absl::Status SolveGregorAndCryptography(
 
   while (reader.ReadRecord(problem)) {
     nlohmann::json json_data;
-    json_data["name"] = problem.name(); // TODO: change to index
-    // if (problem.solutions(i).language() != 3) {
-    //   // remove this solution
-    //   problem.mutable_solutions(i)->Clear();
-    // }
+    json_data["name"] = problem.name(); 
     const std::vector<absl::string_view> inputs =
         GetInputs(problem, 10);
     const std::vector<absl::string_view> outputs =
@@ -138,8 +134,9 @@ absl::Status SolveGregorAndCryptography(
     json_data["number"] = problem.solutions_size();
 
     Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
+    Py2TesterSandboxer tester_py2(Py2InterpreterPath(), Py2LibraryPaths());
     TestOptions options;
-    options.num_threads = 2 * 40; 
+    options.num_threads = 40; 
     options.stop_on_first_failure = true;
 
     std::vector<double> times;
@@ -148,10 +145,17 @@ absl::Status SolveGregorAndCryptography(
       if (problem.solutions(i).language() != 1 || problem.solutions(i).language() != 3) {
         times.push_back(0.0);
         continue;
+      // python2
+      } else if (problem.solutions(i).language() == 1) {
+        ASSIGN_OR_RETURN(MultiTestResult result,
+                        tester_py2.Test(problem.solutions(i).solution(), inputs, options, outputs));
+      // python3
+      } else { 
+        ASSIGN_OR_RETURN(MultiTestResult result,
+                        tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
       }
 
-      ASSIGN_OR_RETURN(MultiTestResult result,
-                      tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
+      // Get the total time
       double total_time = 0.0;
       for (const auto& test_result : result.test_results) {
         if (*test_result.passed) {
@@ -165,9 +169,11 @@ absl::Status SolveGregorAndCryptography(
       }
       times.push_back(total_time);
     }
+
+    // Dump the times
     json_data["times"] = times;
 
-    std::cout << json_data.dump() << std::endl;
+    std::cout << "Tested " << problem.name() << std::endl;
   }
   return absl::OkStatus();
 }
