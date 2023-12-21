@@ -199,11 +199,11 @@ absl::Status SolveGregorAndCryptography(
     ++problem_no;
   }
 
-  std::string env_command("PROBLEM_NO=");
-  env_command += std::to_string(problem_no);
-  char * env = const_cast<char *>(env_command.c_str());
-  std::cout << "set env using commend: " << env << std::endl;
-  putenv(const_cast<char *>(env_command.c_str()));
+  std::cout << "write problem no to file" << std::endl;
+  std::ofstream out("/home/songrun/work/code_contests/problem_no.txt");
+  out << problem_no << std::endl;
+  out.close();
+  
   return absl::OkStatus();
 }
 
@@ -213,7 +213,13 @@ absl::Status SolveGregorAndCryptography(
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
   const std::string filename = absl::GetFlag(FLAGS_valid_path);
-  const int problem_no = std::stoi(absl::GetFlag(FLAGS_problem_no));
+  int problem_no = std::stoi(absl::GetFlag(FLAGS_problem_no));
+
+  std::ifstream in("/home/songrun/work/code_contests/problem_no.txt");
+  in >> problem_no;
+
+
+
   if (filename.empty()) {
     std::cerr << "The flag `valid_path` was empty and it should not be, please "
                  "pass `--valid_path=...` "
