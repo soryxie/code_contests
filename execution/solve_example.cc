@@ -23,6 +23,7 @@
 #include <tuple>
 #include <vector>
 #include <fstream>
+#include <cstdlib>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/flag.h"
@@ -135,6 +136,14 @@ absl::Status SolveGregorAndCryptography(
     std::vector<double> times;
     MultiTestResult *multi_result = nullptr;
     bool purn_solution = false;
+
+    int py_files = 0;
+    for (int i=0; i<problem.solutions_size(); ++i) {
+      if (problem.solutions(i).language() == ContestProblem::Solution::PYTHON || problem.solutions(i).language() == ContestProblem::Solution::PYTHON3) {
+        ++py_files;
+      }
+    }
+
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
       if (problem.solutions(i).language() != ContestProblem::Solution::PYTHON && problem.solutions(i).language() != ContestProblem::Solution::PYTHON3) {
@@ -166,7 +175,7 @@ absl::Status SolveGregorAndCryptography(
       }
 
       times.push_back(total_time);
-      if (total_time * problem.solutions_size() > 2 * 60) {
+      if (total_time * py_files > 5 * 60) {
         purn_solution = true;
         break;
       }
@@ -176,7 +185,7 @@ absl::Status SolveGregorAndCryptography(
     json_data["times"] = times;
     if (purn_solution) {
       std::cout << "Maybe too long" << std::endl;
-      std::ofstream out("too_long_solutions.jsonl", std::ios_base::app);
+      std::ofstream out("./too_long_solutions.jsonl", std::ios_base::app);
       out << json_data.dump() << std::endl;
       out.close();
       json_data["times"].clear();
@@ -187,6 +196,12 @@ absl::Status SolveGregorAndCryptography(
     std::cout << "finished!" << std::endl;
     ++problem_no;
   }
+
+  std::string env_command("PROBLEM_NO=");
+  env_command += std::to_string(problem_no);
+  char * env = const_cast<char *>(env_command.c_str());
+  std::cout << "set env using commend: " << env << std::endl;
+  putenv(const_cast<char *>(env_command.c_str()));
   return absl::OkStatus();
 }
 
