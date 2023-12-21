@@ -40,7 +40,7 @@
 #include "nlohmann/json.hpp"
 
 ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
-ABSL_FLAG(int, problem_no, "", "start index of the problem.");
+ABSL_FLAG(std::string, problem_no, "", "start index of the problem.");
 
 namespace deepmind::code_contests {
 namespace {
@@ -177,7 +177,7 @@ absl::Status SolveGregorAndCryptography(
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
   const std::string filename = absl::GetFlag(FLAGS_valid_path);
-  const int problem_no = absl::GetFlag(FLAGS_problem_no);
+  const int problem_no = std::stoi(absl::GetFlag(FLAGS_problem_no));
   if (filename.empty()) {
     std::cerr << "The flag `valid_path` was empty and it should not be, please "
                  "pass `--valid_path=...` "
