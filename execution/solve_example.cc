@@ -131,7 +131,7 @@ absl::Status SolveGregorAndCryptography(
     std::vector<double> times;
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
-      MultiTestResult &multi_result;
+      MultiTestResult &multi_result = nullptr;
       if (problem.solutions(i).language() != 1 || problem.solutions(i).language() != 3) {
         times.push_back(0.0);
         continue;
