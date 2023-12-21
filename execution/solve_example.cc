@@ -132,7 +132,7 @@ absl::Status SolveGregorAndCryptography(
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
       MultiTestResult *multi_result = nullptr;
-      if (problem.solutions(i).language() != ContestProblem::Solution::PYTHON || problem.solutions(i).language() != ContestProblem::Solution::PYTHON3) {
+      if (problem.solutions(i).language() != ContestProblem::Solution::PYTHON && problem.solutions(i).language() != ContestProblem::Solution::PYTHON3) {
         times.push_back(0.0);
         continue;
       // python2
