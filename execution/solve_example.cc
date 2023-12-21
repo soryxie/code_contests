@@ -64,29 +64,6 @@ while t:
 
 constexpr absl::string_view kInvalidSolution = ")";
 
-absl::StatusOr<ContestProblem> FindGregorAndCryptography(
-    const absl::string_view filename) {
-  riegeli::RecordReader<riegeli::FdReader<>> reader(
-      std::forward_as_tuple(filename));
-  ContestProblem problem;
-
-  while (reader.ReadRecord(problem)) {
-    if (problem.name() == "1549_A. Gregor and Cryptography") {
-      int num_solutions = problem.solutions_size();
-      for (int i=num_solutions-1; i>=0; --i) {
-        if (problem.solutions(i).language() != 3) {
-          // remove this solution
-          problem.mutable_solutions(i)->Clear();
-        }
-      }
-      return problem;
-    }
-  }
-  return absl::NotFoundError(
-      "Gregor and Cryptography problem not found. Did you pass the "
-      "validation dataset?");
-}
-
 std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
                                          int max_size) {
   std::vector<absl::string_view> inputs;
@@ -99,7 +76,7 @@ std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
   for (const auto& test : problem.generated_tests()) {
     inputs.push_back(test.input());
   }
-  inputs.resize(max_size);
+  // inputs.resize(max_size);
   return inputs;
 }
 
@@ -115,7 +92,7 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
   for (const auto& test : problem.generated_tests()) {
     outputs.push_back(test.output());
   }
-  outputs.resize(max_size);
+  // outputs.resize(max_size);
   return outputs;
 }
 
@@ -148,37 +125,37 @@ absl::Status SolveGregorAndCryptography(
 
   while (reader.ReadRecord(problem)) {
     nlohmann::json json_data;
-    json_data["name"] = problem.name();
-    int num_solutions = problem.solutions_size();
-    for (int i=num_solutions-1; i>=0; --i) {
-      if (problem.solutions(i).language() != 3) {
-        // remove this solution
-        problem.mutable_solutions(i)->Clear();
-      }
-    }
+    json_data["name"] = problem.name(); // TODO: change to index
+    // if (problem.solutions(i).language() != 3) {
+    //   // remove this solution
+    //   problem.mutable_solutions(i)->Clear();
+    // }
     const std::vector<absl::string_view> inputs =
-        GetInputs(problem,
-                  /*max_size=*/10);
+        GetInputs(problem, 10);
     const std::vector<absl::string_view> outputs =
-        GetOutputs(problem,
-                  /*max_size=*/10);
+        GetOutputs(problem, 10);
 
     json_data["number"] = problem.solutions_size();
 
     Py3TesterSandboxer tester(Py3InterpreterPath(), Py3LibraryPaths());
     TestOptions options;
-    options.num_threads = 4;
+    options.num_threads = 2 * 40; 
     options.stop_on_first_failure = true;
-
 
     std::vector<double> times;
     for (int i=0; i<problem.solutions_size(); ++i) {
+      // we only care about python solutions
+      if (problem.solutions(i).language() != 1 || problem.solutions(i).language() != 3) {
+        times.push_back(0.0);
+        continue;
+      }
+
       ASSIGN_OR_RETURN(MultiTestResult result,
                       tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
       double total_time = 0.0;
       for (const auto& test_result : result.test_results) {
         if (*test_result.passed) {
-          double execution_duration = static_cast<double>(ToInt64Nanoseconds(test_result.execution_duration)) / 1e6;
+          double execution_duration = static_cast<double>(ToInt64Nanoseconds(test_result.execution_duration)) / 1e9;
           total_time += execution_duration;
         }
         else {
