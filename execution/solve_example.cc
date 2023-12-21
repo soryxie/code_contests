@@ -54,10 +54,12 @@ std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
   for (const auto& test : problem.private_tests()) {
     inputs.push_back(test.input());
   }
-  for (const auto& test : problem.generated_tests()) {
-    inputs.push_back(test.input());
+  if (inputs.size() <= max_size) {
+    for (const auto& test : problem.generated_tests()) {
+      inputs.push_back(test.input());
+    }
+    inputs.resize(max_size);
   }
-  // inputs.resize(max_size);
   return inputs;
 }
 
@@ -70,10 +72,12 @@ std::vector<absl::string_view> GetOutputs(const ContestProblem& problem,
   for (const auto& test : problem.private_tests()) {
     outputs.push_back(test.output());
   }
-  for (const auto& test : problem.generated_tests()) {
-    outputs.push_back(test.output());
+  if (outputs.size() <= max_size) {
+    for (const auto& test : problem.generated_tests()) {
+      outputs.push_back(test.output());
+    }
+    outputs.resize(max_size);
   }
-  // outputs.resize(max_size);
   return outputs;
 }
 
@@ -116,9 +120,9 @@ absl::Status SolveGregorAndCryptography(
     json_data["id"] = problem_no;
     std::cout << "Start perf problem: " << problem_no << "-" << problem.name() << std::endl;
     const std::vector<absl::string_view> inputs =
-        GetInputs(problem, 10);
+        GetInputs(problem, 200);
     const std::vector<absl::string_view> outputs =
-        GetOutputs(problem, 10);
+        GetOutputs(problem, 200);
 
     json_data["number"] = problem.solutions_size();
 
@@ -129,9 +133,9 @@ absl::Status SolveGregorAndCryptography(
     options.stop_on_first_failure = true;
 
     std::vector<double> times;
+    MultiTestResult *multi_result = nullptr;
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
-      MultiTestResult *multi_result = nullptr;
       if (problem.solutions(i).language() != ContestProblem::Solution::PYTHON && problem.solutions(i).language() != ContestProblem::Solution::PYTHON3) {
         times.push_back(0.0);
         continue;
