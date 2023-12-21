@@ -96,19 +96,16 @@ void ReportResults(const MultiTestResult& multi_result) {
 }
 
 absl::Status SolveGregorAndCryptography(
-  const absl::string_view valid_filename) {
+  const absl::string_view valid_filename, int problem_no) {
 
   riegeli::RecordReader<riegeli::FdReader<>> reader(
      std::forward_as_tuple(valid_filename));
   ContestProblem problem;
 
-  // output filename is valid_filename.replace(".json", "_perfed.json")
   std::string json_file_name(valid_filename);
   json_file_name.replace(json_file_name.find(".json"), 5, "_perfed.json");
 
   std::string filename(valid_filename);
-  std::string token = filename.substr(filename.find("-") + 1, filename.find("-") + 6);
-  int problem_no = std::stoi(token);
   std::cout << "Start index: " << problem_no << std::endl;
 
   while (reader.ReadRecord(problem)) {
@@ -175,13 +172,14 @@ absl::Status SolveGregorAndCryptography(
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
   const std::string filename = absl::GetFlag(FLAGS_valid_path);
+  const std::string problem_no = absl::GetFlag(FLAGS_problem_no);
   if (filename.empty()) {
     std::cerr << "The flag `valid_path` was empty and it should not be, please "
                  "pass `--valid_path=...` "
               << std::endl;
   } else {
     absl::Status status =
-        deepmind::code_contests::SolveGregorAndCryptography(filename);
+        deepmind::code_contests::SolveGregorAndCryptography(filename, atoi(problem_no.c_str()));
     if (!status.ok()) {
       std::cerr << "Failed: " << status.message() << std::endl;
     }
