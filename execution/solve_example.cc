@@ -131,7 +131,7 @@ absl::Status SolveGregorAndCryptography(
     std::vector<double> times;
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
-      MultiTestResult &multi_result = nullptr;
+      MultiTestResult *multi_result = nullptr;
       if (problem.solutions(i).language() != 1 || problem.solutions(i).language() != 3) {
         times.push_back(0.0);
         continue;
@@ -139,17 +139,17 @@ absl::Status SolveGregorAndCryptography(
       } else if (problem.solutions(i).language() == 1) {
         ASSIGN_OR_RETURN(MultiTestResult result,
                         tester_py2.Test(problem.solutions(i).solution(), inputs, options, outputs));
-        multi_result = result;
+        multi_result = &result;
       // python3
       } else { 
         ASSIGN_OR_RETURN(MultiTestResult result,
                         tester.Test(problem.solutions(i).solution(), inputs, options, outputs));
-        multi_result = result;
+        multi_result = &result;
       }
 
       // Get the total time
       double total_time = 0.0;
-      for (const auto& test_result : multi_result.test_results) {
+      for (const auto& test_result : multi_result->test_results) {
         if (*test_result.passed) {
           double execution_duration = static_cast<double>(ToInt64Nanoseconds(test_result.execution_duration)) / 1e9;
           total_time += execution_duration;
