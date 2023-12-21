@@ -43,27 +43,6 @@ ABSL_FLAG(std::string, valid_path, "", "Path to validation dataset.");
 namespace deepmind::code_contests {
 namespace {
 
-constexpr absl::string_view kGoodSolution = R"py(
-t = int(input())
-while t:
-  n = int(input())
-  print(2, n-1)
-  t -= 1
-)py";
-
-constexpr absl::string_view kBadSolution = R"py(
-t = int(input())
-while t:
-  n = int(input())
-  if n > 20:
-    print(1, 1)
-  else:
-    print(2, n-1)
-  t -= 1
-)py";
-
-constexpr absl::string_view kInvalidSolution = ")";
-
 std::vector<absl::string_view> GetInputs(const ContestProblem& problem,
                                          int max_size) {
   std::vector<absl::string_view> inputs;
@@ -123,9 +102,16 @@ absl::Status SolveGregorAndCryptography(
      std::forward_as_tuple(valid_filename));
   ContestProblem problem;
 
+  std::string filename(valid_filename);
+  std::string token = filename.substr(filename.find("-") + 1, filename.find("-") + 6);
+  int problem_no = std::stoi(token);
+  std::cout << "Start index: " << problem_no << std::endl;
+
   while (reader.ReadRecord(problem)) {
     nlohmann::json json_data;
     json_data["name"] = problem.name(); 
+    json_data["id"] = problem_no;
+    std::cout << "Start perf problem: " << problem_no << "-" << problem.name() << std::endl;
     const std::vector<absl::string_view> inputs =
         GetInputs(problem, 10);
     const std::vector<absl::string_view> outputs =
@@ -172,8 +158,7 @@ absl::Status SolveGregorAndCryptography(
 
     // Dump the times
     json_data["times"] = times;
-
-    std::cout << "Tested " << problem.name() << std::endl;
+    std::cout << "finished!" << std::endl;
   }
   return absl::OkStatus();
 }
