@@ -105,7 +105,7 @@ absl::Status SolveGregorAndCryptography(
   ContestProblem problem;
 
   std::string json_file_name(valid_filename);
-  json_file_name.replace(json_file_name.find(".json"), 5, "_perfed.json");
+  json_file_name += "_perfed.json";
 
   std::string filename(valid_filename);
   std::cout << "Start index: " << problem_no << std::endl;
