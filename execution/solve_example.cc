@@ -102,6 +102,10 @@ absl::Status SolveGregorAndCryptography(
      std::forward_as_tuple(valid_filename));
   ContestProblem problem;
 
+  // output filename is valid_filename.replace(".json", "_perfed.json")
+  std::string json_file_name(valid_filename);
+  json_file_name.replace(json_file_name.find(".json"), 5, "_perfed.json");
+
   std::string filename(valid_filename);
   std::string token = filename.substr(filename.find("-") + 1, filename.find("-") + 6);
   int problem_no = std::stoi(token);
@@ -156,8 +160,10 @@ absl::Status SolveGregorAndCryptography(
       times.push_back(total_time);
     }
 
-    // Dump the times
     json_data["times"] = times;
+    std::ofstream out(json_file_name, std::ios_base::app);
+    out << json_data.dump() << std::endl;
+    out.close();
     std::cout << "finished!" << std::endl;
   }
   return absl::OkStatus();
