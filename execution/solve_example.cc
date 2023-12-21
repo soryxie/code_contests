@@ -109,7 +109,7 @@ absl::Status SolveGregorAndCryptography(
   ContestProblem problem;
 
   std::string json_file_name(valid_filename);
-  json_file_name += "_perfed.json";
+  json_file_name += "_perfed.jsonl";
 
   std::string filename(valid_filename);
   std::cout << "Start index: " << problem_no << std::endl;
@@ -134,6 +134,7 @@ absl::Status SolveGregorAndCryptography(
 
     std::vector<double> times;
     MultiTestResult *multi_result = nullptr;
+    bool purn_solution = false;
     for (int i=0; i<problem.solutions_size(); ++i) {
       // we only care about python solutions
       if (problem.solutions(i).language() != ContestProblem::Solution::PYTHON && problem.solutions(i).language() != ContestProblem::Solution::PYTHON3) {
@@ -163,10 +164,23 @@ absl::Status SolveGregorAndCryptography(
           break;
         }
       }
+
       times.push_back(total_time);
+      if (total_time * problem.solutions_size() > 2 * 60) {
+        purn_solution = true;
+        break;
+      }
     }
 
+    
     json_data["times"] = times;
+    if (purn_solution) {
+      std::cout << "Maybe too long" << std::endl;
+      std::ofstream out("too_long_solutions.jsonl", std::ios_base::app);
+      out << json_data.dump() << std::endl;
+      out.close();
+      json_data["times"].clear();
+    }
     std::ofstream out(json_file_name, std::ios_base::app);
     out << json_data.dump() << std::endl;
     out.close();

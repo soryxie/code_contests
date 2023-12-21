@@ -91,7 +91,7 @@ std::ostream& operator<<(std::ostream& os, const MultiTestResult& multi_result);
 inline constexpr int64_t kDefaultMemoryLimitBytes = INT64_C(256) << 20;
 
 struct TestOptions {
-  absl::Duration max_execution_duration = absl::Seconds(2);
+  absl::Duration max_execution_duration = absl::Seconds(10);
   int num_threads = 1;
   int64_t memory_limit_bytes = kDefaultMemoryLimitBytes;
   bool stop_on_first_failure = false;
