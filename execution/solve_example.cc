@@ -187,7 +187,7 @@ absl::Status SolveGregorAndCryptography(
     json_data["times"] = times;
     if (purn_solution) {
       std::cout << "Maybe too long" << std::endl;
-      std::ofstream out("/home/songrun/work/code_contests/too_long_solutions.jsonl", std::ios_base::app);
+      std::ofstream out(json_file_name + "too_long_solutions.jsonl", std::ios_base::app);
       out << json_data.dump() << std::endl;
       out.close();
       json_data["times"].clear();
@@ -200,7 +200,7 @@ absl::Status SolveGregorAndCryptography(
   }
 
   std::cout << "write problem no to file" << std::endl;
-  std::ofstream out("/home/songrun/work/code_contests/problem_no.txt");
+  std::ofstream out("/home/songrun/code_contests/problem_no.txt");
   out << problem_no << std::endl;
   out.close();
   
@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
   const std::string filename = absl::GetFlag(FLAGS_valid_path);
   int problem_no = std::stoi(absl::GetFlag(FLAGS_problem_no));
 
-  std::ifstream in("/home/songrun/work/code_contests/problem_no.txt");
+  std::ifstream in("/home/songrun/code_contests/problem_no.txt");
   in >> problem_no;
 
 
